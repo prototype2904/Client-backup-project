@@ -20,7 +20,7 @@ public class ClientRestService {
 		this.restTemplate = new RestTemplate();
 	}
 	
-	public ResponseEntity<String> sendFile(/*פאיכ */)
+	public ResponseEntity<String> sendFile()
 	{
 		return null;
 		///

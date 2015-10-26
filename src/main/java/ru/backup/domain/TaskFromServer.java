@@ -1,72 +1,59 @@
 package ru.backup.domain;
 
-import java.util.List;
+import java.io.Serializable;
 
 
-/**
- * Задача от сервера на загрузку резервной копии файлов на сервер
- * 
- * @author Roman
- *
- */
-public class TaskFromServer {
+public class TaskFromServer implements Serializable{
 	
-	private String id;
-
-	private String username;
+	private Long id;
 	
-	private String filePath;
+	private String filename;
 	
-	private String version;
+	private String format;
 	
-	private String generalId;
-
-
-	public String getFilePaths() {
-		return filePath;
-	}
-
-	public void setFilePaths(String filePath) {
-		this.filePath = filePath;
-	}
-
-	public String getId() {
+	private String dirPath;
+	
+	private User user;
+	
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(String id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
-	public String getUsername() {
-		return username;
+	public String getFilename() {
+		return filename;
 	}
 
-	public void setUsername(String username) {
-		this.username = username;
+	public void setFilename(String filename) {
+		this.filename = filename;
 	}
 
-	public String getFilePath() {
-		return filePath;
+	public String getFormat() {
+		return format;
 	}
 
-	public void setFilePath(String filePath) {
-		this.filePath = filePath;
+	public void setFormat(String format) {
+		this.format = format;
 	}
 
-	public String getVersion() {
-		return version;
+	public String getDirPath() {
+		return dirPath;
 	}
 
-	public void setVersion(String version) {
-		this.version = version;
+	public void setDirPath(String dirPath) {
+		this.dirPath = dirPath;
 	}
 
-	public String getGeneralId() {
-		return generalId;
+	public User getUser() {
+		return user;
 	}
 
-	public void setGeneralId(String generalId) {
-		this.generalId = generalId;
+	public void setUser(User user) {
+		this.user = user;
 	}
+
+	
 }

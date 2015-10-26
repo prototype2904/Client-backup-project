@@ -11,7 +11,9 @@ package ru.backup.domain;
  */
 public enum ApplicationURLs {
 	
-	GET_TASKS_FROM_SERVER_URL("http://localhost:8080/rest/tasks/"),
+	GET_TASKS_FROM_SERVER_URL("http://localhost:8080/rest/tasks/all/"),
+	CORRECT_FILE("http://localhost:8080/rest/files/correct/"),
+	POST_FILE("http://localhost:8080/rest/files/upload/"),
 	EXAMPLE_POST("http://localhost:8080/rest/backup/post/");
 	
 	private String url;
