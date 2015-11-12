@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -31,33 +32,47 @@ import ru.backup.domain.TaskFromServer;
  */
 @Service
 public class RestServiceImpl implements RestService {
-	
+
 	/**
 	 * spring рест шаблон
 	 */
 	private RestTemplate restTemplate;
-	
-	public  RestServiceImpl() {
+
+	public RestServiceImpl() {
 		restTemplate = new RestTemplate();
 		restTemplate.getMessageConverters().add(new ByteArrayHttpMessageConverter());
 	}
 
 	@Override
-	public String sendObject(ApplicationURLs url, HttpEntity<?> httpEntity) {
-		
-		return restTemplate.exchange(url.getUrl(), HttpMethod.POST, httpEntity, String.class).getBody();
+	public String sendFile(HttpEntity<?> httpEntity) {
+
+		return restTemplate.exchange(ApplicationURLs.POST_FILE.getUrl(), HttpMethod.POST, httpEntity, String.class)
+				.getBody();
 	}
 
 	@Override
-	public List<TaskForClient> getTaskFromServer(ApplicationURLs url, HttpEntity<?> httpEntity) throws JsonParseException, JsonMappingException, RestClientException, IOException {
+	public List<TaskForClient> getTaskFromServer(HttpEntity<?> httpEntity) throws JsonParseException, JsonMappingException, IOException {
 		ObjectMapper mapper = new ObjectMapper();
 
-		String body = restTemplate.exchange(url.getUrl(), HttpMethod.GET, httpEntity, String.class).getBody();
-		
-		//конвертируем тело ответа в список задач
+		String body = restTemplate
+				.exchange(ApplicationURLs.GET_TASKS_FROM_SERVER_URL.getUrl(), HttpMethod.GET, httpEntity, String.class)
+				.getBody();
+
+		// конвертируем тело ответа в список задач
 		List<TaskForClient> readValue = mapper.readValue(body, new TypeReference<List<TaskForClient>>() {
 		});
 		return readValue;
+	}
+
+	@Override
+	public Object downloadFileFromServer(HttpEntity<?> httpEntity) throws JsonParseException, JsonMappingException, RestClientException, IOException {
+		ObjectMapper mapper = new ObjectMapper();
+
+		String object = restTemplate.exchange(ApplicationURLs.DOWNLOAD_FILE.getUrl(), HttpMethod.POST, httpEntity,
+				String.class).getBody();
+
+		byte[] a = object.getBytes();
+		return a;
 	}
 
 }

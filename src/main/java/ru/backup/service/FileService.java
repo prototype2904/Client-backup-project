@@ -1,9 +1,15 @@
 package ru.backup.service;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -12,9 +18,12 @@ import java.util.List;
 import org.springframework.http.HttpEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 
 import ru.backup.domain.ApplicationURLs;
+import ru.backup.domain.FileForm;
 import ru.backup.domain.TaskForClient;
+import ru.backup.domain.User;
 import ru.backup.rest.service.AuthService;
 import ru.backup.rest.service.AuthServiceImpl;
 import ru.backup.rest.service.RestService;
@@ -74,12 +83,11 @@ public class FileService {
 	 * 
 	 * @throws IOException
 	 */
-	public void getAndDoTasks(String username, String password) throws IOException {
+	public void getAndDoTasks(User user) throws IOException {
 
 		// получить задачи с сервреа
 		List<TaskForClient> tasks = new ArrayList<>(
-				restService.getTaskFromServer(ApplicationURLs.GET_TASKS_FROM_SERVER_URL,
-						new HttpEntity<>(authService.authenticate(username, password))));
+				restService.getTaskFromServer(new HttpEntity<>(authService.authenticate(user.getUsername(), user.getPassword()))));
 
 		// Выполним каждую
 		tasks.forEach(taskForClient -> {
@@ -106,7 +114,7 @@ public class FileService {
 				HttpEntity<?> request = new HttpEntity(map, authService.authenticate("roma", "1234"));
 
 				// отправим файл на сервер
-				String response = restService.sendObject(ApplicationURLs.POST_FILE, request);
+				String response = restService.sendFile(request);
 
 				System.out.println("File " + taskForClient.getTaskFromServer().getFilename() + "."
 						+ taskForClient.getTaskFromServer().getFormat() + " was sent");
@@ -156,6 +164,86 @@ public class FileService {
 			return hex;
 		} catch (Exception e) {
 			return new byte[0];
+		}
+	}
+
+	public void downloadFileFromServer(FileForm fileForm) {
+
+		// добавим параметры запроса
+		MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+		map.add("filename", fileForm.getFilename());// название
+		map.add("format", fileForm.getFormat());// формат
+		map.add("version", fileForm.getVersion().toString());// версия файла
+
+		// Создадим запрос
+		HttpEntity<?> request = new HttpEntity(map, authService.authenticate(fileForm.getUser().getUsername(), fileForm.getUser().getPassword()));
+
+		// получим файл с сервера
+		Object response = null;
+		try {
+			response = restService.downloadFileFromServer(request);
+		} catch (RestClientException | IOException e1) {
+			e1.printStackTrace();
+		}
+
+		// получили строку, значит ошибка
+		if (response instanceof String) {
+			String error = (String) response;
+			System.err.println(error);
+
+			// если массив, то файл
+		} else if (response instanceof byte[]) {
+			byte[] file = (byte[]) response;
+
+			// создадим этот файл в нашей системе
+			try {
+				createFile(fileForm, file);
+			} catch (IOException e) {
+				System.err.println("Файл получен с сервера, но записать не удалось. Ошибка ввода/вывода.");
+			}
+		}
+	}
+
+	private void createFile(FileForm fileForm, byte[] file) throws IOException {
+		// формат файла /{username}_{filename}_{version}.{format}
+		Path p = Paths.get(String.format("%s/%s_.%s", ApplicationURLs.FILES_URLS.getUrl(), fileForm.getFilename(),
+				fileForm.getFormat()));
+
+		// если файл уже существует, то удалим его
+		if (Files.isReadable(p)) {
+			deleteFile(fileForm);
+		}
+
+		// создадим новый файл
+		try (OutputStream out = new BufferedOutputStream(
+				Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.APPEND))) {
+			// запишем новый файл
+			// склеиваем правые и левые 4 бита в байт и записываем в файл
+			for (int i = 0; i < file.length; i += 2) {
+				out.write((file[i] << 4) + file[i + 1]);
+			}
+		} catch (IOException x) {
+			throw new IOException("Неудалось открыть файл или записать в него.");
+		}
+	}
+
+	/**
+	 * удаление файла
+	 * 
+	 * @param fileForm
+	 *            - описание файла
+	 */
+	private void deleteFile(FileForm fileForm) {
+
+		// формат файла '/{username}_{filename}_{version}.{format}'
+		Path p = Paths.get(String.format("%s/%s.%s", ApplicationURLs.FILES_URLS.getUrl(), fileForm.getFilename(),
+				fileForm.getFormat()));
+
+		// удалить файл
+		try (OutputStream out = new BufferedOutputStream(
+				Files.newOutputStream(p, StandardOpenOption.DELETE_ON_CLOSE, StandardOpenOption.APPEND))) {
+		} catch (IOException x) {
+			System.err.println(x);
 		}
 	}
 }

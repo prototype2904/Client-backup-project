@@ -15,6 +15,7 @@ import ru.backup.domain.TaskFromServer;
 
 /**
  * Сервис для рест запросов на сервер
+ * 
  * @author Stetskevich Roman
  *
  */
@@ -23,23 +24,41 @@ public interface RestService {
 	/**
 	 * Получить задачу с сервера
 	 * 
-	 * @param url - ссылка на сервер
-	 * @param httpEntity - 
+	 * @param url
+	 *            - ссылка на сервер
+	 * @param httpEntity
+	 *            -
 	 * @return
+	 * @throws IOException
+	 * @throws RestClientException
+	 * @throws JsonMappingException
+	 * @throws JsonParseException
+	 */
+	List<TaskForClient> getTaskFromServer(HttpEntity<?> httpEntity)
+			throws JsonParseException, JsonMappingException, RestClientException, IOException;
+
+	/**
+	 * отправить объект на сервер
+	 * 
+	 * @param url
+	 * @param httpEntity
+	 * @return
+	 */
+	String sendFile(HttpEntity<?> httpEntity);
+
+	/**
+	 * Скачать файл с сервера
+	 * 
+	 * @param url
+	 *            - ссылка на рест сервис
+	 * @param httpEntity
+	 *            - параметры запроса
+	 * @return - либо массив файла, либо сообщение ошибки
 	 * @throws IOException 
 	 * @throws RestClientException 
 	 * @throws JsonMappingException 
 	 * @throws JsonParseException 
 	 */
-	List<TaskForClient> getTaskFromServer(ApplicationURLs url, HttpEntity<?> httpEntity) throws JsonParseException, JsonMappingException, RestClientException, IOException;
-
-	/**
-	 * отправить объект на сервер
-	 * @param url
-	 * @param httpEntity
-	 * @return
-	 */
-	public String sendObject(ApplicationURLs url, HttpEntity<?> httpEntity);
-
+	Object downloadFileFromServer(HttpEntity<?> httpEntity) throws JsonParseException, JsonMappingException, RestClientException, IOException;
 
 }
