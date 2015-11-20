@@ -19,5 +19,4 @@ public interface AuthService {
 	 * @return - Http ץוהונ
 	 */
 	HttpHeaders authenticate(String username, String password);
-
-}
+	}

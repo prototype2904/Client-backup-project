@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 import ru.backup.domain.ApplicationURLs;
+import ru.backup.domain.FileForm;
 import ru.backup.domain.TaskForClient;
 import ru.backup.domain.TaskFromServer;
 
@@ -61,4 +62,9 @@ public interface RestService {
 	 */
 	Object downloadFileFromServer(HttpEntity<?> httpEntity) throws JsonParseException, JsonMappingException, RestClientException, IOException;
 
+	
+	Object authenticate(String username, String password);
+
+	List<FileForm> getFileFormsFromServer(HttpEntity<?> httpEntity)
+			throws JsonParseException, JsonMappingException, IOException;		
 }

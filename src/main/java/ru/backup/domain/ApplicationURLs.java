@@ -16,7 +16,9 @@ public enum ApplicationURLs {
 	POST_FILE("http://localhost:8080/rest/files/upload/"),
 	EXAMPLE_POST("http://localhost:8080/rest/backup/post/"),
 	DOWNLOAD_FILE("http://localhost:8080/rest/files/download/"),
-	FILES_URLS("./");
+	FILES_URLS("./"),
+	AUTH("http://localhost:8080/rest/auth/"),
+	GET_FILE_FORMS("http://localhost:8080/rest/tasks/files/");
 	
 	private String url;
 	

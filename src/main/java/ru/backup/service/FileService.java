@@ -21,6 +21,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 
 import ru.backup.domain.ApplicationURLs;
+import ru.backup.domain.Errors;
 import ru.backup.domain.FileForm;
 import ru.backup.domain.TaskForClient;
 import ru.backup.domain.User;
@@ -89,6 +90,13 @@ public class FileService {
 		List<TaskForClient> tasks = new ArrayList<>(
 				restService.getTaskFromServer(new HttpEntity<>(authService.authenticate(user.getUsername(), user.getPassword()))));
 
+		if(tasks.size() > 0)
+		{
+			System.out.println("С сервера получено " + tasks.size() + ". Приступаем к выполнению");
+		}else{
+			System.out.println("На сервере нет задач.");
+		}
+		
 		// Выполним каждую
 		tasks.forEach(taskForClient -> {
 
@@ -111,20 +119,40 @@ public class FileService {
 				map.add("checksum", checksum);// хэш файла
 
 				// Создадим запрос
-				HttpEntity<?> request = new HttpEntity(map, authService.authenticate("roma", "1234"));
+				HttpEntity<?> request = new HttpEntity(map, authService.authenticate(user.getUsername(), user.getPassword()));
 
 				// отправим файл на сервер
 				String response = restService.sendFile(request);
 
-				System.out.println("File " + taskForClient.getTaskFromServer().getFilename() + "."
-						+ taskForClient.getTaskFromServer().getFormat() + " was sent");
-				System.out.println("Response " + response);
+				System.out.println("Файл " + taskForClient.getTaskFromServer().getFilename() + "."
+						+ taskForClient.getTaskFromServer().getFormat() + " отправлен.");
+				System.out.println("Ответ от сервера " + response);
 			} else {
-				System.out.println("File " + taskForClient.getTaskFromServer().getFilename() + "."
-						+ taskForClient.getTaskFromServer().getFormat() + " already exists");
+				System.out.println("Версия файла " + taskForClient.getTaskFromServer().getFilename() + "."
+						+ taskForClient.getTaskFromServer().getFormat() + " уже имеется на сервере.");
 			}
 		});
 	}
+	
+	public List<FileForm> geUserFileForms(User user){
+		MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+		map.add("username", user.getUsername());
+
+		// Создадим запрос
+		HttpEntity<?> request = new HttpEntity(map, authService.authenticate(user.getUsername(), user.getPassword()));
+
+		// отправим файл на сервер
+		try {
+			List<FileForm> response = restService.getFileFormsFromServer(request);
+			return response;
+		} catch (IOException e) {
+			System.out.println(Errors.IO_ERROR.getMes());
+		}
+		return null;
+	}
+	
+	
+	
 
 	/**
 	 * Провера, есть ли файл уже на сервере
