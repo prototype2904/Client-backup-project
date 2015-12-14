@@ -24,35 +24,25 @@ import ru.backup.service.FileService;
 
 public class Main {
 
-	private final static String WELCOME = "Добро пожаловать в систему резервного копирования!";
+	private final static String WELCOME = "Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РІ СЃРёСЃС‚РµРјСѓ СЂРµР·РµСЂРІРЅРѕРіРѕ РєРѕРїРёСЂРѕРІР°РЅРёСЏ!";
 
-	private final static String HELLO = "Приветствую, ";
+	private final static String HELLO = "РџСЂРёРІРµС‚СЃС‚РІСѓСЋ, ";
 
-	private final static String INPUT_LOGIN_AND_PASS = "Для входа в систему необходимо ввести логин и пароль";
+	private final static String INPUT_LOGIN_AND_PASS = "Р”Р»СЏ РІС…РѕРґР° РІ СЃРёСЃС‚РµРјСѓ РЅРµРѕР±С…РѕРґРёРјРѕ РІРІРµСЃС‚Рё Р»РѕРіРёРЅ Рё РїР°СЂРѕР»СЊ";
 
-	private final static String ON_BACKUP_MODE = "Включить режим резервного копирования.";
+	private final static String ON_BACKUP_MODE = "Р’РєР»СЋС‡РёС‚СЊ СЂРµР¶РёРј СЂРµР·РµСЂРІРЅРѕРіРѕ РєРѕРїРёСЂРѕРІР°РЅРёСЏ.";
 
-	private final static String FILES_ON_SERVER = "Посмотреть, какие файлы есть на сервере";
+	private final static String FILES_ON_SERVER = "РџРѕСЃРјРѕС‚СЂРµС‚СЊ, РєР°РєРёРµ С„Р°Р№Р»С‹ РµСЃС‚СЊ РЅР° СЃРµСЂРІРµСЂРµ";
 
-	private final static String DOWNLOAD_VER_FILE = "Скачать версию одного файла";
+	private final static String MES_BACKUP_MODE = "РљР°Р¶РґС‹Рµ 5 СЃРµРєСѓРЅРґ Р±СѓРґСѓС‚ РїРѕР»СѓС‡Р°С‚СЊСЃСЏ Р·Р°РґР°С‡Рё СЃ СЃРµСЂРІРµСЂР° РґР»СЏ СЂРµР·РµСЂРІРіРѕРіРѕ РєРѕРїРёСЂРѕРІР°РЅРёСЏ. \n Р”Р»СЏ РІС‹С…РѕРґР° РІРІРµРґРёС‚Рµ 0\n";
 
-	private final static String DOWNLOAD_ALL_VERS = "Скачать все версии одного файла";
-
-	private final static String CHANGE_USER = "Сменить пользователя";
-
-	private final static String MES_BACKUP_MODE = "Каждые 20 секунд будут получаться задачи с сервера для резервгого копирования. \n Для выхода введите 0\n";
-
-	private final static String BEGIN_BACKUP = "Началось резеврное копирование:";
+	private final static String BEGIN_BACKUP = "РќР°С‡Р°Р»РѕСЃСЊ СЂРµР·РµРІСЂРЅРѕРµ РєРѕРїРёСЂРѕРІР°РЅРёРµ:";
 
 	private final static int timer_sec = 5 * 1000;
 
 	private static User user = new User();
 
 	private static FileService fileService = new FileService();
-
-	private static AuthService authService = new AuthServiceImpl();
-
-	private static String str = "";
 
 	private static int stopBackup = 1;
 
@@ -62,14 +52,13 @@ public class Main {
 		if (user == null || user.getUsername() == null) {
 			return null;
 		}
-		String menu = HELLO + user.getUsername() + "1. " + ON_BACKUP_MODE + "\n" + "2. " + FILES_ON_SERVER + "\n"
-				+ "3. " + DOWNLOAD_VER_FILE + "\n" + "4. " + DOWNLOAD_ALL_VERS + "\n" + "5. " + CHANGE_USER + "\n";
+		String menu = HELLO + user.getUsername() + "\n1. " + ON_BACKUP_MODE + "\n" + "2. " + FILES_ON_SERVER + "\n";
 		return menu;
 	}
 
 	private static void selectMode() {
 		try{
-			stopBackup = 1;
+			stopBackup = 0;
 			System.out.println(menu());
 			int i = 0;
 			String nextLine = sc.nextLine();
@@ -82,6 +71,7 @@ public class Main {
 			}
 			switch (nextLine) {
 			case "1":
+				stopBackup = 1;
 				onBackupMode();
 				break;
 			case "2":
@@ -100,39 +90,44 @@ public class Main {
 
 	private static void showAllFilesOnServer() {
 		if (user == null || user.getUsername() == null) {
-			System.out.println("Введите логин и пароль");
+			System.out.println("Р’РІРµРґРёС‚Рµ Р»РѕРіРёРЅ Рё РїР°СЂРѕР»СЊ");
 			inputUsernameAndPassword();
 			return;
 		} else {
 			List<FileForm> forms = fileService.geUserFileForms(user);
 
-			System.out.println("0 - Выход");
-			if (forms.size() > 0) {
-				for (int i = 0; i < forms.size(); i++) {
-					System.out.println(i + 1 + ". " + forms.get(i).getFilename() + "." + forms.get(i).getFormat()
-							+ " (версия " + forms.get(i).getVersion() + ")");
-				}
-				try {
-					int number = Integer.parseInt(sc.nextLine());
-					if (number == 0) {
-						selectMode();
-					} else if (number >= 1 && number <= forms.size()) {
-						FileForm fileForm = forms.get(number - 1);
-						fileService.downloadFileFromServer(fileForm);
-						System.out.println("Файл удачно скачан.");
-						selectMode();
-					} else {
+			System.out.println("0 - Р’С‹С…РѕРґ");
+			if(forms != null)
+			{
+				if (forms.size() > 0) {
+					for (int i = 0; i < forms.size(); i++) {
+						System.out.println(i + 1 + ". " + forms.get(i).getFilename() + "." + forms.get(i).getFormat()
+								+ " (РІРµСЂСЃРёСЏ " + forms.get(i).getVersion() + ")");
+					}
+					try {
+						int number = Integer.parseInt(sc.nextLine());
+						if (number == 0) {
+							selectMode();
+						} else if (number >= 1 && number <= forms.size()) {
+							FileForm fileForm = forms.get(number - 1);
+							fileService.downloadFileFromServer(fileForm);
+							System.out.println("Р¤Р°Р№Р» СѓРґР°С‡РЅРѕ СЃРєР°С‡Р°РЅ.");
+							selectMode();
+						} else {
+							System.out.println(Errors.IO_ERROR.getMes());
+							showAllFilesOnServer();
+						}
+					} catch (NumberFormatException ex) {
 						System.out.println(Errors.IO_ERROR.getMes());
 						showAllFilesOnServer();
 					}
-				} catch (NumberFormatException ex) {
-					System.out.println(Errors.IO_ERROR.getMes());
-					showAllFilesOnServer();
+				} else {
+					System.out.println("Р¤Р°Р№Р»РѕРІ РЅР° СЃРµСЂРІРµСЂРµ РЅРµС‚. Р”Р»СЏ РІС‹С…РѕРґР° РІРІРµРґРёС‚Рµ Р»СЋР±РѕР№ СЃРёРјРІРѕР»");
+					int number = sc.nextInt();
+					selectMode();
 				}
-			} else {
-				System.out.println("Файлов на сервере нет. Для выхода введите любой символ");
-				int number = sc.nextInt();
-				selectMode();
+			}else{
+				System.out.println("РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ СЃРїРёСЃРѕРє С„Р°Р№Р»РѕРІ");
 			}
 		}
 
@@ -163,9 +158,9 @@ public class Main {
 			System.out.println(INPUT_LOGIN_AND_PASS);
 			String username = "";
 			String password = "";
-			System.out.println("Логин:");
+			System.out.println("Р›РѕРіРёРЅ:");
 			username = sc.nextLine();
-			System.out.println("Пароль:");
+			System.out.println("РџР°СЂРѕР»СЊ:");
 			password = sc.nextLine();
 			auth(username, password);
 		} catch (IOException e) {
@@ -174,6 +169,8 @@ public class Main {
 		}
 
 	}
+	
+	private static boolean startBackup = false;
 
 	private static void onBackupMode() {
 		Timer timer = new Timer();
@@ -183,13 +180,25 @@ public class Main {
 					System.out.println(BEGIN_BACKUP);
 
 					try {
+						startBackup = true;
 						fileService.getAndDoTasks(user);
-						selectMode();
 					} catch (IOException e) {
-						e.printStackTrace();
+						stopBackup = 0;
+						System.out.println(Errors.IO_ERROR.getMes());
+					}catch(NullPointerException ex){
+						stopBackup = 0;
+						System.out.println(Errors.CONNECT.getMes());
+						selectMode();
+					}catch(Exception ex){
+						stopBackup = 0;
+						System.out.println(Errors.UNKNOWN.getMes());
+						selectMode();
+					}finally{
+						startBackup = false;
 					}
 				} else {
-					selectMode();
+					timer.cancel();
+					timer.purge();
 				}
 			}
 		}, timer_sec);
@@ -199,16 +208,21 @@ public class Main {
 			stopBackup = Integer.parseInt(sc.nextLine());
 		} catch (NumberFormatException ex) {
 			System.out.println(Errors.IO_ERROR.getMes());
+		} catch(IndexOutOfBoundsException ex){
+			System.out.println("РџР»РѕС…РѕР№ РІС‹С…РѕРґ РёР· С‚Р°Р№РјРµСЂР°.");
 		}
-		if (stopBackup == 0) {
+		if (stopBackup == 0 ) {
 			timer.cancel();
-			selectMode();
+			timer.purge();
+			while(startBackup){try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+			}}
+				selectMode();
 		} else {
-			timer.cancel();
 			System.out.println(Errors.IO_ERROR.getMes());
 			onBackupMode();
 		}
-		timer.cancel();
 	}
 
 	private static void start() {

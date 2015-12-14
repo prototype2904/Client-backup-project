@@ -87,54 +87,61 @@ public class FileService {
 	public void getAndDoTasks(User user) throws IOException {
 
 		// получить задачи с сервреа
-		List<TaskForClient> tasks = new ArrayList<>(
-				restService.getTaskFromServer(new HttpEntity<>(authService.authenticate(user.getUsername(), user.getPassword()))));
+		List<TaskForClient> tasks = new ArrayList<>(restService
+				.getTaskFromServer(new HttpEntity<>(authService.authenticate(user.getUsername(), user.getPassword()))));
 
-		if(tasks.size() > 0)
-		{
+		if (tasks.size() > 0) {
 			System.out.println("С сервера получено " + tasks.size() + ". Приступаем к выполнению");
-		}else{
+		} else {
 			System.out.println("На сервере нет задач.");
 		}
-		
+
 		// Выполним каждую
 		tasks.forEach(taskForClient -> {
 
-			// получим файл в виде массив по 4 бита
-			byte[] file = convertFileToHex(new File(
-					taskForClient.getTaskFromServer().getDirPath() + taskForClient.getTaskFromServer().getFilename()
-							+ "." + taskForClient.getTaskFromServer().getFormat()));
+			try {
+				// получим файл в виде массив по 4 бита
+				byte[] file = convertFileToHex(new File(
+						taskForClient.getTaskFromServer().getDirPath() + taskForClient.getTaskFromServer().getFilename()
+								+ "." + taskForClient.getTaskFromServer().getFormat()));
 
-			// посчитаем хэш файла
-			String checksum = getHashFile(file);
+				// посчитаем хэш файла
+				String checksum = getHashFile(file);
 
-			// посмотрим, есть ли такая версия файла уже на сервере
-			if (isFileAlreadyExistOnServer(taskForClient, checksum) == false) {
+				// посмотрим, есть ли такая версия файла уже на сервере
+				if (isFileAlreadyExistOnServer(taskForClient, checksum) == false) {
 
-				// добавим параметры запроса
-				MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-				map.add("file", file); // массив файла
-				map.add("filename", taskForClient.getTaskFromServer().getFilename());// название
-				map.add("format", taskForClient.getTaskFromServer().getFormat());// формат
-				map.add("checksum", checksum);// хэш файла
+					// добавим параметры запроса
+					MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+					map.add("file", file); // массив файла
+					map.add("filename", taskForClient.getTaskFromServer().getFilename());// название
+					map.add("format", taskForClient.getTaskFromServer().getFormat());// формат
+					map.add("checksum", checksum);// хэш файла
 
-				// Создадим запрос
-				HttpEntity<?> request = new HttpEntity(map, authService.authenticate(user.getUsername(), user.getPassword()));
+					// Создадим запрос
+					HttpEntity<?> request = new HttpEntity(map,
+							authService.authenticate(user.getUsername(), user.getPassword()));
 
-				// отправим файл на сервер
-				String response = restService.sendFile(request);
+					// отправим файл на сервер
+					String response = restService.sendFile(request);
 
-				System.out.println("Файл " + taskForClient.getTaskFromServer().getFilename() + "."
-						+ taskForClient.getTaskFromServer().getFormat() + " отправлен.");
-				System.out.println("Ответ от сервера " + response);
-			} else {
-				System.out.println("Версия файла " + taskForClient.getTaskFromServer().getFilename() + "."
-						+ taskForClient.getTaskFromServer().getFormat() + " уже имеется на сервере.");
+					System.out.println("Файл " + taskForClient.getTaskFromServer().getFilename() + "."
+							+ taskForClient.getTaskFromServer().getFormat() + " отправлен.");
+					System.out.println("Ответ от сервера " + response);
+
+				} else {
+					System.out.println("Версия файла " + taskForClient.getTaskFromServer().getFilename() + "."
+							+ taskForClient.getTaskFromServer().getFormat() + " уже имеется на сервере.");
+				}
+			} catch (Exception ex) {
+				System.out.println("Файла " +taskForClient.getTaskFromServer().getDirPath() + taskForClient.getTaskFromServer().getFilename()
+								+ "." + taskForClient.getTaskFromServer().getFormat() + " нет у пользователя.");
+
 			}
 		});
 	}
-	
-	public List<FileForm> geUserFileForms(User user){
+
+	public List<FileForm> geUserFileForms(User user) {
 		MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
 		map.add("username", user.getUsername());
 
@@ -150,9 +157,6 @@ public class FileService {
 		}
 		return null;
 	}
-	
-	
-	
 
 	/**
 	 * Провера, есть ли файл уже на сервере
@@ -204,7 +208,8 @@ public class FileService {
 		map.add("version", fileForm.getVersion().toString());// версия файла
 
 		// Создадим запрос
-		HttpEntity<?> request = new HttpEntity(map, authService.authenticate(fileForm.getUser().getUsername(), fileForm.getUser().getPassword()));
+		HttpEntity<?> request = new HttpEntity(map,
+				authService.authenticate(fileForm.getUser().getUsername(), fileForm.getUser().getPassword()));
 
 		// получим файл с сервера
 		Object response = null;
